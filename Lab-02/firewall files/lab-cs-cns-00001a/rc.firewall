@@ -309,7 +309,7 @@ $IPTABLES -A FORWARD -p TCP --dport $PASV_FTP_PORT_RANGE -i $Client_NET_IFACE -s
 # Allow FTP Server -> Client - Cmd
 $IPTABLES -A FORWARD -p TCP --sport 20:21 -i $Server_NET_IFACE -s $FTP_IP_ADDRESS -d $Client_NET_IP_RANGE -j ACCEPT
 
-# Allow FTP Client -> Server - Negotiated port
+# Allow FTP Server -> Client - Negotiated port
 $IPTABLES -A FORWARD -p TCP --sport $PASV_FTP_PORT_RANGE -i $Server_NET_IFACE -s $FTP_IP_ADDRESS -d $Client_NET_IP_RANGE -j ACCEPT
 
 # Allow SSH Client -> Server
@@ -381,9 +381,9 @@ $IPTABLES -A FORWARD -p all -i $Internet_IFACE -d $Server_NET_IP_RANGE -m state 
 # web
 #$IPTABLES -t nat -A PREROUTING -p tcp -d $NAT_WEB_IP_ADDRESS --dport 80 -j DNAT --to $WEB_IP_ADDRESS
 
-# Anything that is NOT the NAT address on client OR server side, we route it out of our network
-# $IPTABLES -t nat -A PREROUTING -p all -i $Client_NET_IFACE -d $Server_NET_IP -j DNAT --to $Internet_IP
-# $IPTABLES -t nat -A PREROUTING -p all -i $Server_NET_IFACE -d $Client_NET_IP -j DNAT --to $Internet_IP
+# Any situation where client directly contacts server or server directly contacts client is routed out of the network
+$IPTABLES -t nat -A PREROUTING -p all -i $Client_NET_IFACE -d $Server_NET_IP -j DNAT --to $Internet_IP
+$IPTABLES -t nat -A PREROUTING -p all -i $Server_NET_IFACE -d $Client_NET_IP -j DNAT --to $Internet_IP
 
 # Allow ICMP Client -> Server
 $IPTABLES -t nat -A PREROUTING -p icmp -d $NAT_ICMP_IP_ADDRESS -j DNAT --to $ICMP_IP_ADDRESS
@@ -395,7 +395,7 @@ $IPTABLES -t nat -A PREROUTING -p icmp -d $Server_NET_GW -j DNAT --to $Client_NE
 $IPTABLES -t nat -A PREROUTING -p tcp -d $NAT_SSH_IP_ADDRESS --dport 22 -j DNAT --to $SSH_IP_ADDRESS
 
 # Allow FTP Client -> Server - Cmd
-$IPTABLES -t nat -A PREROUTING -p tcp -d $NAT_FTP_IP_ADDRESS --dport 20:21 -j DNAT --to $FTP_IP_ADDRESS
+$IPTABLES -t nat -A PREROUTING -p tcp -d $NAT_FTP_IP_ADDRESS --dport 21 -j DNAT --to $FTP_IP_ADDRESS
 
 # Allow FTP Client -> Server - Data
 $IPTABLES -t nat -A PREROUTING -p tcp -d $NAT_FTP_IP_ADDRESS --dport $PASV_FTP_PORT_RANGE -j DNAT --to $FTP_IP_ADDRESS
@@ -427,10 +427,10 @@ $IPTABLES -t nat -A POSTROUTING -p icmp -s $Client_NET_IP -o $Server_NET_IFACE -
 $IPTABLES -t nat -A POSTROUTING -p tcp -s $SSH_IP_ADDRESS -o $Client_NET_IFACE --sport 22 -j SNAT --to-source $Client_NET_IP
 
 # Allow FTP Server -> Client - Cmd
-$IPTABLES -t nat -A POSTROUTING -p tcp -s $FTP_IP_ADDRESS -o $Client_NET_IFACE --sport 20:21 -j SNAT --to-source $Client_NET_IP
+$IPTABLES -t nat -A POSTROUTING -p tcp -s $FTP_IP_ADDRESS -o $Client_NET_IFACE --sport 21 -j SNAT --to-source $NAT_FTP_IP_ADDRESS
 
 # Allow FTP Server -> Client - Data
-$IPTABLES -t nat -A POSTROUTING -p tcp -s $FTP_IP_ADDRESS -o $Client_NET_IFACE --sport $PASV_FTP_PORT_RANGE -j SNAT --to-source $Client_NET_IP
+$IPTABLES -t nat -A POSTROUTING -p tcp -s $FTP_IP_ADDRESS -o $Client_NET_IFACE --sport $PASV_FTP_PORT_RANGE -j SNAT --to-source $NAT_FTP_IP_ADDRESS
 
 # Allow Web Server -> Client
 $IPTABLES -t nat -A POSTROUTING -p tcp -s $WEB_IP_ADDRESS -o $Client_NET_IFACE --sport 80 -j SNAT --to-source $Client_NET_IP
