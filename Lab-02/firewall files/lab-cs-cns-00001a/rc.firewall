@@ -347,8 +347,9 @@ $IPTABLES -A FORWARD -p all -i $Internet_IFACE -d $Server_NET_IP_RANGE -m state 
 
 #$IPTABLES -A INPUT -p tcp -j bad_tcp_packets
 $IPTABLES -A INPUT -p all -i $Internet_IFACE -d $Internet_IP_RANGE -j ACCEPT
-$IPTABLES -A INPUT -p udp -i $Internet_IFACE -d $Internet_IP_RANGE --sport 53 -j ACCEPT
-$IPTABLES -A INPUT -p udp -i $Internet_IFACE -d $Internet_IP_RANGE --dport 53 -j ACCEPT
+# Accept UDP packets for DNS purposes
+$IPTABLES -A INPUT -p udp -j ACCEPT
+$IPTABLES -A INPUT -p udp -j ACCEPT
 $IPTABLES -A INPUT -p icmp -i $Client_NET_IFACE -m state --state ESTABLISHED,RELATED -j ACCEPT
 $IPTABLES -A INPUT -p icmp -i $Server_NET_IFACE -m state --state ESTABLISHED,RELATED -j ACCEPT
 
@@ -366,8 +367,9 @@ $IPTABLES -A INPUT -p icmp -i $Server_NET_IFACE -m state --state ESTABLISHED,REL
 
 #$IPTABLES -A OUTPUT -p tcp -j bad_tcp_packets
 $IPTABLES -A OUTPUT -p all -o $Internet_IFACE -s $Internet_IP_RANGE -j ACCEPT
-$IPTABLES -A OUTPUT -p udp -o $Internet_IFACE -s $Internet_IP_RANGE --sport 53 -j ACCEPT
-$IPTABLES -A OUTPUT -p udp -o $Internet_IFACE -s $Internet_IP_RANGE --dport 53 -j ACCEPT
+# Accept UDP packets for DNS purposes
+$IPTABLES -A OUTPUT -p udp -j ACCEPT
+$IPTABLES -A OUTPUT -p udp -j ACCEPT
 $IPTABLES -A OUTPUT -p icmp -o $Client_NET_IFACE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 $IPTABLES -A OUTPUT -p icmp -o $Server_NET_IFACE -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 
